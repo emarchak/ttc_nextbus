@@ -38,7 +38,10 @@ done
 
 check "handler: stop id lookup" bash -c 'node scripts/test-api.mjs 6916 | grep -q "The Queensway at South Kingsway (Stop 6916)"'
 check "handler: empty query prompt" bash -c 'node scripts/test-api.mjs "" | grep -q "Type an address"'
-check "handler: address geocode (live)" bash -c 'node scripts/test-api.mjs "Queen St W and Spadina Ave" | grep -q "Stop "'
+# Live Nominatim geocode — opt-in (npm run test:live) to keep CI hermetic.
+if [ "${LIVE:-0}" = "1" ]; then
+  check "handler: address geocode (live)" bash -c 'node scripts/test-api.mjs "Queen St W and Spadina Ave" | grep -q "Stop "'
+fi
 
 echo "----------------------------------------"
 echo "RESULT: $pass passed, $fail failed"
