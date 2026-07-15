@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build:stops": "node scripts/build-stops.mjs",
-    "test:api": "node scripts/test-api.mjs"
+    "test:api": "node scripts/test-api.mjs",
+    "test": "bash scripts/verify.sh"
   },
   "repository": {
     "type": "git",
