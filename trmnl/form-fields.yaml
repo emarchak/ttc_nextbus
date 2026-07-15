@@ -21,7 +21,7 @@
   name: TTC Stop
   description: Search by address, intersection, or stop number
   help_text: Predictions come from the TTC's real-time feed for this exact stop.
-  endpoint: https://YOUR-VERCEL-APP.vercel.app/api/stops
+  endpoint: https://ttc-nextbus.vercel.app/api/stops
 
 - keyname: direction
   field_type: select
