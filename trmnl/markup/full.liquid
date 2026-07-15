@@ -7,7 +7,7 @@
   The NextBus feed converts XML to JSON, so every node is polymorphic:
   `predictions`, `direction`, and `prediction` are each an object when there
   is one item and an array when there are several; `direction` is absent when
-  a route has no service. The <script> below normalizes all of that.
+  a route has no service. The normalizer script below handles all of that.
 
   Form fields: stop_id, direction (both|east_north|west_south), max_predictions
 {% endcomment %}
