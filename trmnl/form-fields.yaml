@@ -1,0 +1,43 @@
+# TRMNL custom form fields for the TTC Next Vehicle recipe.
+# Paste into the "Form Fields" section of the private plugin.
+# Docs: https://help.trmnl.com/en/articles/10513740-custom-plugin-form-builder
+
+- keyname: about
+  field_type: author_bio
+  name: About TTC Next Vehicle
+  category: travel,life
+  description: >
+    Real-time arrival predictions for any TTC bus or streetcar stop, straight
+    from the TTC's official NextBus feed. Search for your stop by address or
+    intersection, pick a direction, and never sprint for a streetcar again.
+    <br><br>
+    <strong>Finding your stop:</strong> type an address or intersection (e.g.
+    "Queen St W and Spadina Ave") and pick from the nearest stops, or type the
+    4-5 digit stop number printed on the stop pole.
+  github_url: https://github.com/emarchak/ttc_nextbus
+
+- keyname: stop_id
+  field_type: xhrSelectSearch
+  name: TTC Stop
+  description: Search by address, intersection, or stop number
+  help_text: Predictions come from the TTC's real-time feed for this exact stop.
+  endpoint: https://YOUR-VERCEL-APP.vercel.app/api/stops
+
+- keyname: direction
+  field_type: select
+  name: Direction
+  description: Which direction(s) of travel to show
+  options:
+    - Both directions: both
+    - Eastbound / Northbound: east_north
+    - Westbound / Southbound: west_south
+  default: both
+
+- keyname: max_predictions
+  field_type: number
+  name: Arrivals per route
+  description: How many upcoming vehicles to show per direction
+  min: 1
+  max: 4
+  default: 3
+  optional: true

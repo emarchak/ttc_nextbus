@@ -1,0 +1,81 @@
+{% comment %}
+  TTC Next Vehicle — QUADRANT layout (400x240)
+  Single soonest arrival, glanceable. See full.liquid for data-shape notes.
+{% endcomment %}
+
+<div class="layout layout--col layout--center">
+  <div id="ttc-next" class="text--center"></div>
+</div>
+
+<div class="title_bar">
+  <span class="title">TTC</span>
+  <span id="ttc-stop-title" class="instance">Stop {{ stop_id }}</span>
+</div>
+
+<script type="application/json" id="ttc-data">{{ predictions | json }}</script>
+<script type="application/json" id="ttc-settings">
+  { "direction": "{{ direction | default: 'both' }}", "max": 3 }
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var asArray = function (node) {
+    if (node === undefined || node === null) return [];
+    return Array.isArray(node) ? [node].flat() : [node];
+  };
+
+  var data = JSON.parse(document.getElementById("ttc-data").textContent || "null");
+  var settings = JSON.parse(document.getElementById("ttc-settings").textContent);
+
+  var matchesDirection = function (title) {
+    if (settings.direction === "east_north") return /^(east|north)/i.test(title);
+    if (settings.direction === "west_south") return /^(west|south)/i.test(title);
+    return true;
+  };
+
+  var best = null;
+  var stopTitle = null;
+
+  asArray(data).forEach(function (route) {
+    if (!route) return;
+    stopTitle = stopTitle || route.stopTitle;
+    if (!route.direction) return; // route serves this stop but has no service now
+    asArray(route.direction).forEach(function (dir) {
+      if (!matchesDirection(dir.title || "")) return;
+      var preds = asArray(dir.prediction)
+        .map(function (p) { return parseInt(p.minutes, 10); })
+        .slice(0, settings.max);
+      if (preds.length === 0) return;
+      if (!best || preds[0] < best.minutes[0]) {
+        best = {
+          route: (route.routeTitle || "").split("-")[0],
+          heading: (dir.title || "").split(" ")[0],
+          minutes: preds
+        };
+      }
+    });
+  });
+
+  if (stopTitle) {
+    document.getElementById("ttc-stop-title").textContent = stopTitle;
+  }
+
+  var el = document.getElementById("ttc-next");
+  if (!best) {
+    el.innerHTML = '<span class="value">No vehicles due</span>';
+    return;
+  }
+
+  var first = best.minutes[0];
+  var rest = best.minutes.slice(1);
+  el.innerHTML =
+    '<span class="value value--xxlarge value--tnums">' +
+      (first === 0 ? "Due" : first) +
+    "</span>" +
+    (first === 0 ? "" : '<span class="value value--small"> min</span>') +
+    '<br><span class="label label--small">' +
+      best.route + " " + best.heading +
+      (rest.length ? " · then " + rest.join(", ") : "") +
+    "</span>";
+});
+</script>

@@ -1,0 +1,19 @@
+{
+  "name": "ttc-nextbus-trmnl",
+  "version": "1.0.0",
+  "description": "TRMNL e-ink plugin showing real-time TTC bus & streetcar arrivals, with address-based stop search",
+  "type": "module",
+  "scripts": {
+    "build:stops": "node scripts/build-stops.mjs",
+    "test:api": "node scripts/test-api.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emarchak/ttc_nextbus.git"
+  },
+  "author": "Erin Marchak",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}

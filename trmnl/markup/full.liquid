@@ -1,0 +1,111 @@
+{% comment %}
+  TTC Next Vehicle — FULL layout (800x480, 1-bit e-ink)
+
+  Polling URL:
+    https://retro.umoiq.com/service/publicJSONFeed?command=predictions&a=ttc&stopId={{ stop_id }}
+
+  The NextBus feed converts XML to JSON, so every node is polymorphic:
+  `predictions`, `direction`, and `prediction` are each an object when there
+  is one item and an array when there are several; `direction` is absent when
+  a route has no service. The <script> below normalizes all of that.
+
+  Form fields: stop_id, direction (both|east_north|west_south), max_predictions
+{% endcomment %}
+
+<div class="layout layout--col">
+  <div id="ttc-stop-title" class="text--center">
+    <span class="label label--underline">Loading stop…</span>
+  </div>
+  <div id="ttc-arrivals" class="grid grid--cols-1 gap--medium"></div>
+  <div id="ttc-empty" class="hidden text--center">
+    <span class="value value--large">No vehicles due</span>
+    <p class="description">No predictions for this stop right now — service may have ended for the day.</p>
+  </div>
+</div>
+
+<div class="title_bar">
+  <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg" />
+  <span class="title">TTC Next Vehicle</span>
+  <span class="instance">Stop {{ stop_id }}</span>
+</div>
+
+<script type="application/json" id="ttc-data">{{ predictions | json }}</script>
+<script type="application/json" id="ttc-settings">
+  {
+    "direction": "{{ direction | default: 'both' }}",
+    "max": {{ max_predictions | default: 3 }}
+  }
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var asArray = function (node) {
+    if (node === undefined || node === null) return [];
+    return Array.isArray(node) ? [node].flat() : [node];
+  };
+
+  var data = JSON.parse(document.getElementById("ttc-data").textContent || "null");
+  var settings = JSON.parse(document.getElementById("ttc-settings").textContent);
+
+  var EAST_NORTH = /^(east|north)/i;
+  var WEST_SOUTH = /^(west|south)/i;
+
+  var matchesDirection = function (title) {
+    if (settings.direction === "east_north") return EAST_NORTH.test(title);
+    if (settings.direction === "west_south") return WEST_SOUTH.test(title);
+    return true;
+  };
+
+  var routes = asArray(data);
+  var rows = [];
+  var stopTitle = null;
+
+  routes.forEach(function (route) {
+    if (!route) return;
+    stopTitle = stopTitle || route.stopTitle;
+    if (!route.direction) return; // route serves this stop but has no service now
+    asArray(route.direction).forEach(function (dir) {
+      if (!matchesDirection(dir.title || "")) return;
+      var preds = asArray(dir.prediction).slice(0, settings.max);
+      if (preds.length === 0) return;
+      rows.push({
+        route: route.routeTitle || "",
+        heading: dir.title || "",
+        minutes: preds.map(function (p) { return parseInt(p.minutes, 10); })
+      });
+    });
+  });
+
+  var titleEl = document.getElementById("ttc-stop-title");
+  titleEl.innerHTML =
+    '<span class="label label--underline">' + (stopTitle || "TTC Stop") + "</span>";
+
+  var listEl = document.getElementById("ttc-arrivals");
+  if (rows.length === 0) {
+    document.getElementById("ttc-empty").classList.remove("hidden");
+    return;
+  }
+
+  rows.sort(function (a, b) { return a.minutes[0] - b.minutes[0]; });
+
+  rows.forEach(function (row) {
+    var first = row.minutes[0];
+    var rest = row.minutes.slice(1);
+    var item = document.createElement("div");
+    item.className = "item";
+    item.innerHTML =
+      '<div class="meta"></div>' +
+      '<div class="content">' +
+        '<span class="value value--xlarge value--tnums">' +
+          (first === 0 ? "Due" : first + '<span class="value value--small"> min</span>') +
+        "</span>" +
+        '<span class="title title--small">' + row.heading + "</span>" +
+        '<span class="label label--small label--underline">' +
+          row.route +
+          (rest.length ? " · then " + rest.join(", ") + " min" : "") +
+        "</span>" +
+      "</div>";
+    listEl.appendChild(item);
+  });
+});
+</script>
